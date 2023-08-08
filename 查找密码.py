@@ -10,18 +10,6 @@ def run_cmd_and_get_output(cmd):
         # print(f"命令执行失败: {e}")
         return None
 
-def find_all_pwd(basedir,pwd):
-    excel_path_list = list()
-    for root, dirs, files in os.walk(basedir):
-        for file in files:
-            path = os.path.join(root,file)
-            if fnmatch(path, "*.txt") or fnmatch(path, "*.doc"):
-                if os.access(path,os.R_OK):
-                    print("找到文件："+path)
-                    excel_path_list.append(path)
-            elif fnmatch(path, ".*")
-    return excel_path_list
-
 
 def get_disks():
     basedirs = list()
@@ -39,7 +27,7 @@ def output2list(output,disk):
     for path in tmp:
         if path != '':
             path = disk+path
-            path = path.replace('\\','/')
+            path = path.replace(r'\\','/')
             result.append(path)
     return result
 
@@ -58,7 +46,7 @@ if __name__ == '__main__':
     target = input("请输入您想要查找的密码: ")
     disks = get_disks()
     result_list = list()
-    # disks = ['D:\\', 'E:\\', 'F:\\']
+    # disks = [r'D:\\', r'E:\\', r'F:\\']
     for disk in disks:
         cmd = r'findstr /s /i /n '+ target +' '+disk+'*.txt'
         print("执行命令："+cmd)
