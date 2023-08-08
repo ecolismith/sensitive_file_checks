@@ -1,80 +1,60 @@
-def find_all_pwd(basedir,pwd):
-    excel_path_list = list()
-    sensitive_file_name = list()
-    pwd_ext = pwd+".*"
-    for root, dirs, files in os.walk(basedir):
-        for file in files:
-            path = os.path.join(root,file)
-            if fnmatch(path, "*.txt") or fnmatch(path, "*.doc"):
-                if os.access(path,os.R_OK):
-                    print("找到文件："+path)
-                    excel_path_list.append(path)
-            elif fnmatch(path, pwd_ext):
-                sensitive_file_name.append(path)
-
-    return excel_path_list,sensitive_file_name
-
-def get_disks():
-    basedirs = list()
-    for sdiskpart in disk_partitions():
-        basedirs.append(sdiskpart.device)
-    if basedirs[0] == basedirs[1]:
-        basedirs.pop(0)
-    print(basedirs)
-    return basedirs
-
-def output2list(output,disk):
-    output = str(output)
-    tmp = output.split(disk)
-    result = list()
-    for path in tmp:
-        if path != '':
-            path = disk+path
-            path = path.replace('\\','/')
-            result.append(path)
-    return result
-
-def divide_result(stra):
-    idx = stra.find(".txt")
-
-    path = stra[0:idx + 4]
-    b = stra[idx + 4:-1]
-    idx = b.find(':', 2)
-    code = b[idx + 1:-1]
-    line_num = b[1:idx]
-    result = "文件地址："+path +"\t所在行:"+line_num+"\t密码内容："+code
-    return result
+from fnmatch import fnmatch
+import psutil
+import os
+import subprocess
 
 def run_cmd_and_get_output(cmd):
     try:
-
+        result = subprocess.check_output(cmd, shell=True)
         return result
     except subprocess.CalledProcessError as e:
         # print(f"命令执行失败: {e}")
         return None
 
-if __name__ == '__main__':
-    target = input("请输入您想要查找的密码: ")
-    disks = get_disks()
-    result_list = list()
-    disks = ['D:\\', 'E:\\', 'F:\\']
-    for disk in disks:
-        cmd = r'findstr /s /i /n '+ target +' '+disk+'*.txt'
-        print("执行命令："+cmd)
-        print("正在搜索："+ disk[0:1]+"盘")
-        print("搜索磁盘的时间较长，可能需要几分钟，请您耐心等待")
-        output = run_cmd_and_get_output(cmd)
-        # print("test: ",output)
-        if output != None and output != "":
-            result_list.extend(output2list(output,disk))
-    try:
-        f = open("疑似含有密码的文本文件.txt",'w',encoding='utf8')
-        for path in result_list:
-            result = divide_result(path)
-            f.write(result+"\n")
-        f.close()
-        print("搜索完成，可能存放密码的文本文档具体信息保存于：疑似含有密码的文本文件.txt")
-        os.system("pause")
+def find_all_code(basedir, pwd):
+    target_path_list = list()
+    code_pattern = pwd+'.*'
+    processed_extension_list = [r'*.txt',r'*.doc',r'*.docx',code_pattern]
 
-    except Exception as e:
-        print(e)
+    for root, dirs, files in os.walk(basedir):
+        for file in files:
+            path = os.path.join(root,file)
+            for extension in processed_extension_list:
+                if fnmatch(path, extension):
+                    if os.access(path,os.R_OK):
+                        print("找到文件："+path)
+                        if extension == code_pattern:
+                            target_path_list.append(path)
+                        elif extension == r'*.doc' or extension==r'*.docx':
+                            cmd = r'findstr /s /i /n '+ pwd +' '+path
+                            result = run_cmd_and_get_output()
+                            if result != None:
+                                target_path_list.append(path)
+
+                        break
+    for path in target_path_list:
+        print("test:"+path)
+        break
+    return target_path_list
+
+def get_disks():
+    basedirs = list()
+    for sdiskpart in psutil.disk_partitions():
+        print(sdiskpart)
+        basedirs.append(sdiskpart.device)
+    return basedirs
+
+
+if __name__ == '__main__':
+    basedirs = get_disks()
+    print(basedirs)
+    pwd = input("请输入您要搜索的密码： ")
+    target_path_list = list()
+    for basedir in basedirs:
+        target_path_list.extend(find_all_code(basedir, pwd))
+
+    f_result = open("密码搜索结果.txt", "w", encoding="utf8")
+    for target_path in target_path_list:
+        f_result.write(target_path+"\n")
+    f_result.close()
+    os.system("pause")

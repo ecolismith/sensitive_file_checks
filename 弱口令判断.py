@@ -33,8 +33,7 @@ def test(var):
 
     return True
 
-
-if __name__ == '__main__':
+def test_pwd():
     var = "test"
     print("口令至少应该有8位，包含数字，字母和特殊符号,中间不能有空格")
     while(var != "exit"):
@@ -46,6 +45,9 @@ if __name__ == '__main__':
         test(var)
     print("已经退出口令强度判断程序")
     os.system("pause")
+
+if __name__ == '__main__':
+    test_pwd()
 
 
 

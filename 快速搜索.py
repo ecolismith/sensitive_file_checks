@@ -69,8 +69,7 @@ def get_disks():
         print(sdiskpart)
         basedirs.append(sdiskpart.device)
     return basedirs
-
-if __name__ == '__main__':
+def search_xls():
     basedirs = get_disks()
     print(basedirs)
     try:
@@ -84,5 +83,8 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
         os.system("pause")
+
+if __name__ == '__main__':
+    search_xls()
 
 
